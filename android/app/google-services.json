@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "978923954572",
+    "project_id": "todo-with-chat",
+    "storage_bucket": "todo-with-chat.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:978923954572:android:f6f015388ed546a20736a9",
+        "android_client_info": {
+          "package_name": "com.tk.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArzjwMtDgjCrGpGWsf1DZ4m9W2EwRzE4Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

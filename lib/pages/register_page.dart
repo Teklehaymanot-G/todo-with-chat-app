@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:todo_with_chat_app/components/my_button.dart';
 import 'package:todo_with_chat_app/components/my_textfield.dart';
+import 'package:todo_with_chat_app/components/warning_message.dart';
+import 'package:todo_with_chat_app/services/auth/auth_service.dart';
 
 class RegisterPage extends StatelessWidget {
   final void Function()? onTap;
@@ -8,12 +10,54 @@ class RegisterPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    TextEditingController _nameController = TextEditingController();
+    TextEditingController _phoneController = TextEditingController();
     TextEditingController _emailController = TextEditingController();
     TextEditingController _passwordController = TextEditingController();
     TextEditingController _confirmController = TextEditingController();
 
-    void registerFun() {
+    void registerFun(BuildContext context) async {
+      final authService = AuthService();
+
+      String name = _nameController.text.trim();
+      String phone = _phoneController.text.trim();
+      String email = _emailController.text.trim();
+      String password = _passwordController.text.trim();
+      String confirmPassword = _confirmController.text.trim();
+
+      if (name.isEmpty) {
+        showWarningDialog(context, "Name cannot be empty.");
+        return;
+      }
+      if (email.isEmpty) {
+        showWarningDialog(context, "Email cannot be empty.");
+        return;
+      }
+      if (!RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$").hasMatch(email)) {
+        showWarningDialog(context, "Please enter a valid email address.");
+        return;
+      }
+      if (password.isEmpty) {
+        showWarningDialog(context, "Password cannot be empty.");
+        return;
+      }
+      if (password != confirmPassword) {
+        showWarningDialog(context, "Password is not much.");
+        return;
+      }
+      if (password.length < 6) {
+        showWarningDialog(context, "Password must be at least 6 characters long.");
+        return;
+      }
+
+      // Try to sign in if validation passes
+      try {
+        await authService.createUserWithEmailAndPassword(name, phone, email, password);
+      } catch (e) {
+        showWarningDialog(context, e.toString());
+      }
     }
+
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
@@ -58,29 +102,27 @@ class RegisterPage extends StatelessWidget {
                 const SizedBox(
                   height: 30,
                 ),
-                Text(
-                  "Welcome back, it’s great to have you",
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontSize: 16,
-                  ),
-                ),
+                MyTextField(labelText: "Name *", controller: _nameController),
                 const SizedBox(
-                  height: 80,
+                  height: 30,
                 ),
-                MyTextField(labelText: "Email", controller: _emailController),
+                MyTextField(labelText: "Phone", controller: _phoneController),
+                const SizedBox(
+                  height: 30,
+                ),
+                MyTextField(labelText: "Email *", controller: _emailController),
                 const SizedBox(
                   height: 16,
                 ),
                 MyTextField(
-                    labelText: "Password",
+                    labelText: "Password *",
                     controller: _passwordController,
                     obscureText: true),
                 const SizedBox(
                   height: 16,
                 ),
                 MyTextField(
-                    labelText: "Confirm Password",
+                    labelText: "Confirm Password *",
                     controller: _confirmController,
                     obscureText: true),
                 const SizedBox(
@@ -88,10 +130,10 @@ class RegisterPage extends StatelessWidget {
                 ),
                 Padding(
                   padding:
-                      const EdgeInsets.symmetric(vertical: 40, horizontal: 25),
+                      const EdgeInsets.symmetric(vertical: 5, horizontal: 25),
                   child: MyButton(
                     label: "Register",
-                    onTap: registerFun,
+                    onTap: () => registerFun(context),
                   ),
                 )
               ],
