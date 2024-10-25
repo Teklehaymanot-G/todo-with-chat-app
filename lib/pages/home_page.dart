@@ -14,9 +14,9 @@ class _HomePageState extends State<HomePage> {
 
   // List of widgets for each tab
   final List<Widget> _tabs = [
-    const TodoTab(),   // Content for To-Do tab
-    const TodoTab(),    // Content for Chat tab
-    const TodoTab(), // Content for Profile tab
+    TodoTab(),   // Content for To-Do tab
+    TodoTab(),    // Content for Chat tab
+    TodoTab(), // Content for Profile tab
   ];
 
   void _onItemTapped(int index) {
