@@ -34,7 +34,7 @@ class _TodoTabState extends State<TodoTab> {
           isGridView: isGridView,
           onToggleView: onToggleView,
           onProfileTap: onProfileTap),
-      body: StreamBuilder (
+      body: StreamBuilder(
         stream: _todoService.getTodosStream(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -68,6 +68,8 @@ class _TodoTabState extends State<TodoTab> {
                   itemCount: todos.length,
                   itemBuilder: (context, index) {
                     final todo = todos[index] as Map<String, dynamic>;
+                    print(todo);
+
                     return _buildTodoCard(todo);
                   },
                 );
@@ -92,8 +94,7 @@ class _TodoTabState extends State<TodoTab> {
             MaterialPageRoute(builder: (context) => TodoDetailPage(todo)),
           );
         },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+        child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -107,56 +108,54 @@ class _TodoTabState extends State<TodoTab> {
                 ),
               ),
               const SizedBox(height: 5),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: bodyContent.length,
-                  itemBuilder: (context, index) {
-                    final item = bodyContent[index];
-                    print(bodyContent);
-                    // Check content type and render accordingly
-                    if (item['type'] == 'text') {
-                      return Text(
-                        item['content'],
-                        style: TextStyle(fontSize: 16),
-                      );
-                    }
-                    else if (item['type'] == 'image') {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        child: Image.network(
-                          item['content'], // Image URL
-                          errorBuilder: (context, error, stackTrace) => Icon(Icons.error), // Error handling
-                        ),
-                      );
-                    }
-                    else if (item['type'] == 'list') {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: List<Widget>.generate(item['content'].length, (index) {
-                            return Row(
-                              children: [
-                                Icon(Icons.check_box_outline_blank), // Or checked icon
-                                SizedBox(width: 5),
-                                Text(item['content'][index]),
-                              ],
-                            );
-                          }),
-                        ),
-                      );
-                    }
-                    return SizedBox.shrink(); // Fallback for unsupported types
-                  },
+
+              if (bodyContent['text'] != null)
+                Text(
+                  bodyContent['text'] ?? '',
+                  style: const TextStyle(fontSize: 16),
                 ),
-              ),
-              Text(
-                todo['body'] ?? '',
-                style: const TextStyle(fontSize: 14),
-              ),
+
+              if (bodyContent['image'] != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Image.network(
+                    bodyContent["image"] ?? "",
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return const Center(child: CircularProgressIndicator());
+                    },
+                    errorBuilder: (context, error, stackTrace) => const Column(
+                      children: [
+                        Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                        Text(
+                          'Image could not load',
+                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+              if (bodyContent['list'] is List && bodyContent['list'].isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: List<Widget>.generate(bodyContent["list"].length, (i) {
+                      return Row(
+                        children: [
+                          Icon(Icons.check_box_outline_blank),
+                          SizedBox(width: 5),
+                          Text(bodyContent["list"][i] ?? ''),
+                        ],
+                      );
+                    }),
+                  ),
+                ),
             ],
           ),
         ),
+
       ),
     );
   }
