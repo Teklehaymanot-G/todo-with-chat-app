@@ -1,148 +1,114 @@
+// add_todo_page.dart
 import 'package:flutter/material.dart';
-import 'package:todo_with_chat_app/components/my_button.dart';
-import 'package:todo_with_chat_app/components/my_textfield.dart';
-import 'package:todo_with_chat_app/components/warning_message.dart';
-import 'package:todo_with_chat_app/services/auth/auth_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:todo_with_chat_app/services/todo/todo_service.dart';
+import 'package:todo_with_chat_app/utils/converter.dart';
 
-class AddTodoPage extends StatelessWidget {
-  AddTodoPage({super.key});
+class AddTodoPage extends StatefulWidget {
+  @override
+  _AddTodoPageState createState() => _AddTodoPageState();
+}
 
-  TextEditingController _emailController = TextEditingController();
-  TextEditingController _passwordController = TextEditingController();
+class _AddTodoPageState extends State<AddTodoPage> {
+  final TodoService _todoService = TodoService();
+  final _titleController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  String? _selectedColor;
+  bool _isPinned = false;
 
-  void loginFun(BuildContext context) async {
-    final authService = AuthService();
+  void _saveTodo() async {
+    final title = _titleController.text.trim();
+    final description = _descriptionController.text.trim();
 
-    // Retrieve the text values from the controllers
-    String email = _emailController.text.trim();
-    String password = _passwordController.text.trim();
-
-    // Validate email and password
-    if (email.isEmpty) {
-      showWarningDialog(context, "Email cannot be empty.");
-      return;
-    }
-    if (!RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$").hasMatch(email)) {
-      showWarningDialog(context, "Please enter a valid email address.");
-      return;
-    }
-    if (password.isEmpty) {
-      showWarningDialog(context, "Password cannot be empty.");
-      return;
-    }
-    if (password.length < 6) {
-      showWarningDialog(context, "Password must be at least 6 characters long.");
+    if (title.isEmpty || description.isEmpty) {
+      // Show a warning if fields are empty
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Title and description cannot be empty.")),
+      );
       return;
     }
 
-    // Try to sign in if validation passes
-    try {
-      await authService.signInWithEmailPassword(email, password);
-    } catch (e) {
-      showWarningDialog(context, e.toString());
-    }
+    final newTodo = {
+      "title": title,
+      "description": description,
+      "color": _selectedColor ?? "defaultColor",
+      "isPinned": _isPinned,
+      "created_at": Timestamp.now(),
+    };
+
+    await _todoService.addTodo(newTodo);
+    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            flex: 1,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Center(
-                  child: Container(
-                    height: 150,
-                    width: 150,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.primary,
-                        width: 1.0,
-                      ),
-                      borderRadius: BorderRadius.circular(75.0),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.today_outlined,
-                          size: 60,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        Icon(
-                          Icons.chat,
-                          size: 60,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(
-                  height: 30,
-                ),
-                Text(
-                  "Welcome back, it’s great to have you",
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(
-                  height: 80,
-                ),
-                MyTextField(labelText: "Email *", controller: _emailController),
-                const SizedBox(
-                  height: 16,
-                ),
-                MyTextField(
-                    labelText: "Password *",
-                    controller: _passwordController,
-                    obscureText: true),
-                const SizedBox(
-                  height: 16,
-                ),
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 5, horizontal: 25),
-                  child: MyButton(
-                    label: "Login",
-                    onTap: () => loginFun(context),
-                  ),
-                )
-              ],
-            ),
+      appBar: AppBar(
+        backgroundColor: Theme.of(context).colorScheme.background,
+        title: const Text('Add Todo'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.check),
+            onPressed: _saveTodo, // Save the todo on tap
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "Not a member?",
-                  style:
-                      TextStyle(color: Theme.of(context).colorScheme.primary),
-                ),
-                const SizedBox(width: 3),
-                GestureDetector(
-                  onTap: (){},
-                  child: const Text(
-                    "Register now",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                )
-              ],
-            ),
-          )
         ],
       ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: _titleController,
+              decoration: const InputDecoration(labelText: 'Title'),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _descriptionController,
+              decoration: const InputDecoration(labelText: 'Description'),
+              maxLines: 3,
+            ),
+            const SizedBox(height: 10),
+            DropdownButtonFormField<String>(
+              value: _selectedColor,
+              items: COLOR_CONVERTER.keys
+                  .map((color) => DropdownMenuItem(
+                        value: color,
+                        child: Text(color),
+                      ))
+                  .toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedColor = value;
+                });
+              },
+              decoration: const InputDecoration(labelText: 'Select Color'),
+            ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Checkbox(
+                  value: _isPinned,
+                  onChanged: (value) {
+                    setState(() {
+                      _isPinned = value!;
+                    });
+                  },
+                ),
+                Text("Pin this Todo"),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
   }
 }

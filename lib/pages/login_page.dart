@@ -24,7 +24,8 @@ class LoginPage extends StatelessWidget {
       showWarningDialog(context, "Email cannot be empty.");
       return;
     }
-    if (!RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$").hasMatch(email)) {
+    if (!RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$")
+        .hasMatch(email)) {
       showWarningDialog(context, "Please enter a valid email address.");
       return;
     }
@@ -33,7 +34,8 @@ class LoginPage extends StatelessWidget {
       return;
     }
     if (password.length < 6) {
-      showWarningDialog(context, "Password must be at least 6 characters long.");
+      showWarningDialog(
+          context, "Password must be at least 6 characters long.");
       return;
     }
 

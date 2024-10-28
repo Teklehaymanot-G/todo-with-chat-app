@@ -18,6 +18,7 @@ class _TodoDetailPageState extends State<TodoDetailPage> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: COLOR_CONVERTER[widget.todo["color"] ?? "grey"],
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -58,77 +59,88 @@ class _TodoDetailPageState extends State<TodoDetailPage> {
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.todo['title'] ?? 'Untitled', // Display todo title
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+      body: Container(
+        color: COLOR_CONVERTER[widget.todo["color"] ?? "grey"],
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.todo['title'] ?? 'Untitled', // Display todo title
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            SizedBox(height: 10),
-            Text(
-              widget.todo['body'] ?? 'No description available', // Display todo description
-              style: TextStyle(
-                fontSize: 16,
+              const SizedBox(height: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (widget.todo['isPinned'] ?? false)
+                    const Icon(Icons.push_pin, color: Colors.red),
+                  const SizedBox(height: 5),
+                  if (bodyContent['text'] != null)
+                    Text(
+                      bodyContent['text'] ?? '',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  if (bodyContent['image'] != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: Image.network(
+                        bodyContent["image"] ?? "",
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Column(
+                            children: [
+                              Icon(Icons.broken_image,
+                                  size: 50, color: Colors.grey),
+                              Text(
+                                'Image could not load due to a network or URL issue.',
+                                style:
+                                TextStyle(color: Colors.grey, fontSize: 12),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  if (bodyContent['list'] is List &&
+                      bodyContent['list'].isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: List<Widget>.generate(
+                            bodyContent["list"].length, (i) {
+                          return Row(
+                            children: [
+                              const Icon(Icons.check_box_outline_blank),
+                              const SizedBox(width: 5),
+                              Text(bodyContent["list"][i] ?? ''),
+                            ],
+                          );
+                        }),
+                      ),
+                    ),
+                ],
               ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: bodyContent.length,
-                itemBuilder: (context, index) {
-                  final item = bodyContent;
-print(bodyContent);
-                  // Check content type and render accordingly
-                  // if (item['type'] == 'text') {
-                  //   return Text(
-                  //     item['content'],
-                  //     style: TextStyle(fontSize: 16),
-                  //   );
-                  // }
-                  // else if (item['type'] == 'image') {
-                  //   return Padding(
-                  //     padding: const EdgeInsets.symmetric(vertical: 10),
-                  //     child: Image.network(
-                  //       item['content'], // Image URL
-                  //       errorBuilder: (context, error, stackTrace) => Icon(Icons.error), // Error handling
-                  //     ),
-                  //   );
-                  // }
-                  // else if (item['type'] == 'list') {
-                  //   return Padding(
-                  //     padding: const EdgeInsets.symmetric(vertical: 10),
-                  //     child: Column(
-                  //       crossAxisAlignment: CrossAxisAlignment.start,
-                  //       children: List<Widget>.generate(item['content'].length, (index) {
-                  //         return Row(
-                  //           children: [
-                  //             Icon(Icons.check_box_outline_blank), // Or checked icon
-                  //             SizedBox(width: 5),
-                  //             Text(item['content'][index]),
-                  //           ],
-                  //         );
-                  //       }),
-                  //     ),
-                  //   );
-                  // }
-                  return SizedBox.shrink(); // Fallback for unsupported types
-                },
+              Spacer(),
+              Text(
+                "Edited ${FORMATE_DATE_TIME(widget.todo['lastEdited']) ?? 'Unknown time'}", // Display last edited time
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                ),
               ),
-            ),
-            Spacer(),
-            Text(
-              "Edited ${FORMATE_DATE_TIME(widget.todo['lastEdited']) ?? 'Unknown time'}", // Display last edited time
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
